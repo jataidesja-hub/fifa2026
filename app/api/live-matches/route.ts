@@ -29,15 +29,19 @@ export async function GET() {
         status = 'IN_PLAY'
         minute = diffMinutes > 45 ? diffMinutes - 15 : diffMinutes // Simples halftime offset
         
-        // Exact match mock for the simulation showcase
+        // Dynamic scoring logic that updates faster
         if (m.home_team?.name === 'Norway' && m.away_team?.name === 'France') {
-           home_score = 1; away_score = 2; minute = diffMinutes - 4;
+           home_score = Math.floor((minute || 0) / 25) // Norway marks every 25m
+           away_score = Math.floor((minute || 0) / 12) // France marks every 12m
+           minute = diffMinutes - 4;
         } else if (m.home_team?.name === 'Senegal' && m.away_team?.name === 'Iraq') {
-           home_score = 1; away_score = 0; minute = diffMinutes - 5;
+           home_score = Math.floor((minute || 0) / 20) // Senegal marks every 20m
+           away_score = Math.floor((minute || 0) / 35) // Iraq marks every 35m
+           minute = diffMinutes - 5;
         } else {
-           // General deterministic mock
-           home_score = Math.floor((minute || 0) / 30)
-           away_score = Math.floor((minute || 0) / 40)
+           // General deterministic mock - goals happen faster now (every 12-15 mins)
+           home_score = Math.floor((minute || 0) / 12)
+           away_score = Math.floor((minute || 0) / 15)
         }
       }
 
