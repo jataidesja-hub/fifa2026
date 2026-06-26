@@ -5,6 +5,26 @@ export default function BracketZoomWrapper({ children }: { children: React.React
   const [expanded, setExpanded] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
+  const [videoUrl, setVideoUrl] = useState('https://www.youtube.com/embed/jfKfPfyJRdk')
+  const [inputValue, setInputValue] = useState('')
+
+  const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setInputValue(val)
+    
+    let embedUrl = val
+    try {
+      if (val.includes('youtube.com/watch')) {
+        const url = new URL(val)
+        const id = url.searchParams.get('v')
+        if (id) embedUrl = `https://www.youtube.com/embed/${id}`
+      } else if (val.includes('youtu.be/')) {
+        const id = val.split('youtu.be/')[1]?.split('?')[0]
+        if (id) embedUrl = `https://www.youtube.com/embed/${id}`
+      }
+    } catch (err) {}
+    if (embedUrl) setVideoUrl(embedUrl)
+  }
 
   useEffect(() => {
     if (!expanded) {
@@ -119,24 +139,47 @@ export default function BracketZoomWrapper({ children }: { children: React.React
             <div style={{
               width: '100%',
               maxWidth: '480px',
-              aspectRatio: '16/9',
-              background: '#000',
-              borderRadius: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem',
               marginBottom: '2rem',
-              flexShrink: 0,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-              overflow: 'hidden',
-              border: '1px solid var(--border)'
+              zIndex: 102
             }}>
-              <iframe 
-                width="100%" 
-                height="100%" 
-                src="https://www.youtube.com/embed/jfKfPfyJRdk" 
-                title="YouTube video" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-              ></iframe>
+              <div style={{
+                width: '100%',
+                aspectRatio: '16/9',
+                background: '#000',
+                borderRadius: '12px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                overflow: 'hidden',
+                border: '1px solid var(--border)'
+              }}>
+                <iframe 
+                  width="100%" 
+                  height="100%" 
+                  src={videoUrl} 
+                  title="YouTube video" 
+                  frameBorder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen
+                ></iframe>
+              </div>
+              <input
+                type="text"
+                value={inputValue}
+                onChange={handleLinkChange}
+                placeholder="Cole o link do YouTube aqui..."
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.9rem',
+                  outline: 'none'
+                }}
+              />
             </div>
           </>
         )}
