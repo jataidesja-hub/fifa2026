@@ -47,7 +47,11 @@ export default function LiveDashboard({
               let hasChanges = false
 
               data.matches.forEach((extMatch: any) => {
-                const idx = newMatches.findIndex(m => m.external_id === extMatch.id)
+                const idx = newMatches.findIndex(m => 
+                  m.external_id === extMatch.id || 
+                  (m.home_team?.external_id === extMatch.homeTeam?.id && m.away_team?.external_id === extMatch.awayTeam?.id) ||
+                  (m.home_team?.name === extMatch.homeTeam?.name && m.away_team?.name === extMatch.awayTeam?.name)
+                )
                 if (idx !== -1) {
                   const m = newMatches[idx]
                   const newHome = extMatch.score?.fullTime?.home ?? m.home_score

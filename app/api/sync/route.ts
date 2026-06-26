@@ -56,10 +56,21 @@ export async function GET(request: Request) {
   let matchesUpdated = 0
 
   try {
-    const matches = await fetchMatches()
+    const [matches, { data: dbMatches }] = await Promise.all([
+      fetchMatches(),
+      supabase.from('matches').select('id, external_id, home_team:teams!matches_home_team_id_fkey(external_id, name), away_team:teams!matches_away_team_id_fkey(external_id, name)')
+    ])
+
     for (const m of matches) {
-      // Pula jogos agendados para não sobrescrever nada desnecessariamente
       if (m.status === 'SCHEDULED' || m.status === 'TIMED') continue
+
+      const dbMatch = dbMatches?.find((dbM: any) => 
+        dbM.external_id === m.id || 
+        (dbM.home_team?.external_id === m.homeTeam?.id && dbM.away_team?.external_id === m.awayTeam?.id) ||
+        (dbM.home_team?.name === m.homeTeam?.name && dbM.away_team?.name === m.awayTeam?.name)
+      )
+
+      if (!dbMatch) continue
 
       const { error } = await supabase.from('matches').update({
         home_score: m.score?.fullTime?.home ?? 0,
@@ -70,7 +81,7 @@ export async function GET(request: Request) {
         away_score_penalties: m.score?.penalties?.away ?? null,
         minute: m.minute || null,
         status: mapStatus(m.status),
-      }).eq('external_id', m.id)
+      }).eq('id', dbMatch.id)
 
       if (!error) matchesUpdated++
     }
