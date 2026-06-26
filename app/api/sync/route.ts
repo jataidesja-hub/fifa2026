@@ -4,6 +4,7 @@ import {
   fetchMatches,
   fetchStandings,
   fetchTeams,
+  fetchScorers,
   mapStatus,
   mapPhase,
 } from '@/lib/football-api'
