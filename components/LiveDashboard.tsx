@@ -162,6 +162,15 @@ export default function LiveDashboard({
     ? [...liveMatches, ...scheduledMatches.slice(0, 4)]
     : scheduledMatches.slice(0, 4)
 
+  const activeGroupKeys = useMemo(() => {
+    const keys = new Set<string>()
+    activeMatches.forEach(m => {
+      if (m.home_team?.group_name) keys.add(m.home_team.group_name)
+      if (m.away_team?.group_name) keys.add(m.away_team.group_name)
+    })
+    return Array.from(keys).sort()
+  }, [activeMatches])
+
   return (
     <div className="live-dashboard">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -189,11 +198,14 @@ export default function LiveDashboard({
         </div>
       )}
 
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '2rem' }}>Classificação Dinâmica</h2>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '2rem' }}>Classificação Dinâmica (Grupos Ativos)</h2>
       <div className="groups-grid">
-        {groupKeys.map(g => (
+        {activeGroupKeys.map(g => (
           <GroupTable key={g} groupName={g} standings={groups[g] as any} />
         ))}
+        {activeGroupKeys.length === 0 && (
+          <div style={{ color: 'var(--text-muted)' }}>Nenhum grupo ativo no momento.</div>
+        )}
       </div>
     </div>
   )

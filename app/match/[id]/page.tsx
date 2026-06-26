@@ -1,9 +1,10 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
-import { supabase, Match, Team, MatchEvent } from '@/lib/supabase'
+import { supabase, Match, Team, MatchEvent, Standing } from '@/lib/supabase'
 import { subscribeToMatch } from '@/lib/realtime'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import GroupTable from '@/components/GroupTable'
 
 function formatDate(d: string) {
   return new Date(d).toLocaleString('pt-BR', {
@@ -27,6 +28,7 @@ export default function MatchPage({ params }: { params: Promise<{ id: string }> 
   const { id } = React.use(params)
   const [match, setMatch] = useState<(Match & { home_team?: Team; away_team?: Team }) | null>(null)
   const [events, setEvents] = useState<MatchEvent[]>([])
+  const [standings, setStandings] = useState<(Standing & { team?: Team })[]>([])
   const [loading, setLoading] = useState(true)
 
   const loadData = useCallback(async () => {
@@ -46,6 +48,21 @@ export default function MatchPage({ params }: { params: Promise<{ id: string }> 
     if (!matchData) { setLoading(false); return }
     setMatch(matchData as any)
     setEvents(eventsData || [])
+    
+    if (matchData.group_name) {
+      const { data: stdData } = await supabase
+        .from('standings')
+        .select(`*, team:teams(*)`)
+        .eq('group_name', matchData.group_name)
+      if (stdData) {
+        // Sort standings
+        stdData.sort((a, b) =>
+          b.points - a.points || b.goal_diff - a.goal_diff || b.goals_for - a.goals_for
+        )
+        setStandings(stdData as any)
+      }
+    }
+
     setLoading(false)
   }, [id])
 
@@ -191,6 +208,12 @@ export default function MatchPage({ params }: { params: Promise<{ id: string }> 
         {events.length === 0 && (isLive || isFinished) && (
           <div className="card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
             Nenhum evento registrado
+          </div>
+        )}
+
+        {events.length === 0 && standings.length > 0 && match.phase === 'GROUP' && (
+          <div style={{ marginTop: '2rem' }}>
+            <GroupTable standings={standings} groupName={match.group_name!} />
           </div>
         )}
       </div>
