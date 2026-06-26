@@ -31,7 +31,7 @@ export default function LiveFloatingCard() {
       position: 'fixed',
       bottom: '2rem',
       right: '2rem',
-      zIndex: 50,
+      zIndex: 110,
       display: 'flex',
       flexDirection: 'column',
       gap: '1rem'
