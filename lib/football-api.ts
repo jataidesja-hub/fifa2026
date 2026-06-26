@@ -120,6 +120,7 @@ export function mapPhase(stage: string): string {
   const map: Record<string, string> = {
     GROUP_STAGE: 'GROUP',
     LAST_32: 'R32',
+    LAST_16: 'R16',
     ROUND_OF_16: 'R16',
     QUARTER_FINALS: 'QF',
     SEMI_FINALS: 'SF',

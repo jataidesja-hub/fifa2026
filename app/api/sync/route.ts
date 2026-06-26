@@ -136,7 +136,7 @@ export async function GET(request: Request) {
           goal_diff: row.goalDifference,
           points: row.points,
           form: row.form,
-        }, { onConflict: 'team_id,group_name', ignoreDuplicates: false })
+        }, { onConflict: 'team_id', ignoreDuplicates: false })
       }
     }
 
