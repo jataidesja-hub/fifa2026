@@ -15,7 +15,7 @@ async function getData() {
       home_team:teams!matches_home_team_id_fkey(*),
       away_team:teams!matches_away_team_id_fkey(*)
     `)
-    .in('phase', ['R32', 'R16', 'QF', 'SF', 'THIRD', 'FINAL'])
+    .in('phase', ['ROUND_32', 'ROUND_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'THIRD_PLACE', 'FINAL'])
     .order('scheduled_at')
 
   return (matches || []) as (Match & { home_team?: Team; away_team?: Team })[]
@@ -139,12 +139,12 @@ export default async function BracketPage() {
       new Date(a.scheduled_at || 0).getTime() - new Date(b.scheduled_at || 0).getTime()
     )
 
-  const r32 = byRound('R32')
-  const r16 = byRound('R16')
-  const qf = byRound('QF')
-  const sf = byRound('SF')
+  const r32 = byRound('ROUND_32')
+  const r16 = byRound('ROUND_16')
+  const qf = byRound('QUARTER_FINAL')
+  const sf = byRound('SEMI_FINAL')
   const final = byRound('FINAL')
-  const third = byRound('THIRD')
+  const third = byRound('THIRD_PLACE')
 
   // Left vs Right strict mapping for R32 based on user rules
   // If r32 doesn't have 16 items yet, fill with undefined to prevent crashes

@@ -79,7 +79,7 @@ export default function GroupTable({ standings, groupName }: Props) {
                           {row.team?.short_name || '?'}
                         </div>
                       )}
-                      <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px', display: 'inline-block', verticalAlign: 'middle' }}>
                         {row.team?.name || 'TBD'}
                       </span>
                     </div>
