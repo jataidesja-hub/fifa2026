@@ -53,7 +53,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // We are now using the static mock data from the ha-world-cup-2026 repo
-  // Syncing with football-data.org is disabled to prevent overwriting the perfect 48-team 104-match structure
-  return NextResponse.json({ success: true, message: "Using local HA World Cup data. Sync disabled to preserve 48-team mock." })
+  let matchesUpdated = 0
+
+  try {
+    const matches = await fetchMatches()
+    for (const m of matches) {
+      // Pula jogos agendados para não sobrescrever nada desnecessariamente
+      if (m.status === 'SCHEDULED' || m.status === 'TIMED') continue
+
+      const { error } = await supabase.from('matches').update({
+        home_score: m.score?.fullTime?.home ?? 0,
+        away_score: m.score?.fullTime?.away ?? 0,
+        home_score_extra: m.score?.extraTime?.home ?? null,
+        away_score_extra: m.score?.extraTime?.away ?? null,
+        home_score_penalties: m.score?.penalties?.home ?? null,
+        away_score_penalties: m.score?.penalties?.away ?? null,
+        minute: m.minute || null,
+        status: mapStatus(m.status),
+      }).eq('external_id', m.id)
+
+      if (!error) matchesUpdated++
+    }
+
+    return NextResponse.json({ success: true, message: "Live scores synced.", matchesUpdated })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 }
