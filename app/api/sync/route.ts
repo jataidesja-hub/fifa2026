@@ -166,21 +166,6 @@ export async function GET(request: Request) {
 
         // Update team group_name if not set
         await supabase.from('teams').update({ group_name: groupName }).eq('id', teamId).is('group_name', null)
-
-        await supabase.from('standings').upsert({
-          team_id: teamId,
-          group_name: groupName,
-          position: row.position,
-          played: row.playedGames,
-          wins: row.won,
-          draws: row.draw,
-          losses: row.lost,
-          goals_for: row.goalsFor,
-          goals_against: row.goalsAgainst,
-          goal_diff: row.goalDifference,
-          points: row.points,
-          form: row.form,
-        }, { onConflict: 'team_id', ignoreDuplicates: false })
       }
     }
 
