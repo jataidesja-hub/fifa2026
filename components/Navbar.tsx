@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 
 const navLinks = [
   { href: '/', label: 'Início' },
+  { href: '/live', label: 'Ao Vivo' },
   { href: '/groups', label: 'Grupos' },
   { href: '/bracket', label: 'Mata-Mata' },
   { href: '/teams', label: 'Seleções' },
