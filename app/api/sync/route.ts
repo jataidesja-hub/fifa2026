@@ -162,10 +162,10 @@ export async function GET(request: Request) {
         const teamId = teamMap[row.team.id]
         if (!teamId) continue
 
-        const groupName = stage.group ? stage.group.replace('GROUP_', '') : 'A'
+        const groupName = stage.group ? stage.group.replace(/Group\s?_?/i, '').trim() : 'A'
 
-        // Update team group_name if not set
-        await supabase.from('teams').update({ group_name: groupName }).eq('id', teamId).is('group_name', null)
+        // Update team group_name (forced update, no null check)
+        await supabase.from('teams').update({ group_name: groupName }).eq('id', teamId)
       }
     }
 

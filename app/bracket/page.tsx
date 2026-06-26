@@ -4,16 +4,8 @@ export const revalidate = 30
 
 export const metadata = {
   title: 'Mata-Mata — FIFA 2026 Dashboard',
-  description: 'Chaveamento do mata-mata da Copa do Mundo FIFA 2026',
+  description: 'Chaveamento Lado-a-Lado da Copa do Mundo FIFA 2026',
 }
-
-const ROUNDS = [
-  { key: 'R32', label: 'RODADA DE 32', slots: 16, width: 180 },
-  { key: 'R16', label: 'OITAVAS DE FINAL', slots: 8, width: 180 },
-  { key: 'QF',  label: 'QUARTAS DE FINAL', slots: 4, width: 180 },
-  { key: 'SF',  label: 'SEMIFINAL', slots: 2, width: 180 },
-  { key: 'FINAL', label: 'FINAL', slots: 1, width: 200 },
-]
 
 async function getData() {
   const { data: matches } = await supabase
@@ -26,7 +18,7 @@ async function getData() {
     .in('phase', ['R32', 'R16', 'QF', 'SF', 'THIRD', 'FINAL'])
     .order('scheduled_at')
 
-  return matches || []
+  return (matches || []) as (Match & { home_team?: Team; away_team?: Team })[]
 }
 
 function FlagOrPlaceholder({ team, size = 20 }: { team?: Team | null; size?: number }) {
@@ -61,7 +53,7 @@ function MatchSlot({ match }: { match?: Match & { home_team?: Team; away_team?: 
 
   const rowStyle = (winner: boolean): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '0.5rem 0.6rem', gap: '0.4rem',
+    padding: '0.4rem 0.6rem', gap: '0.4rem',
     background: winner ? 'rgba(240,192,64,0.1)' : 'transparent',
     fontWeight: winner ? 700 : 400,
     color: winner ? 'var(--gold)' : hasTeams ? 'var(--text-primary)' : 'var(--text-muted)',
@@ -75,12 +67,12 @@ function MatchSlot({ match }: { match?: Match & { home_team?: Team; away_team?: 
       background: 'var(--bg-card)', border: `1px solid ${isLive ? 'rgba(34,197,94,0.4)' : 'var(--border)'}`,
       borderRadius: 8, overflow: 'hidden', transition: 'all 0.2s',
       boxShadow: isLive ? '0 0 12px rgba(34,197,94,0.15)' : 'none',
+      width: '100%',
     }}>
-      {/* Home */}
       <div style={rowStyle(!!homeWins)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflow: 'hidden' }}>
           <FlagOrPlaceholder team={match?.home_team} size={18} />
-          <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 100 }}>
             {teamName(match?.home_team)}
           </span>
         </div>
@@ -90,15 +82,11 @@ function MatchSlot({ match }: { match?: Match & { home_team?: Team; away_team?: 
           </span>
         )}
       </div>
-
-      {/* Divider */}
       <div style={{ height: 1, background: 'var(--border)' }} />
-
-      {/* Away */}
       <div style={rowStyle(!!awayWins)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflow: 'hidden' }}>
           <FlagOrPlaceholder team={match?.away_team} size={18} />
-          <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 100 }}>
             {teamName(match?.away_team)}
           </span>
         </div>
@@ -108,10 +96,8 @@ function MatchSlot({ match }: { match?: Match & { home_team?: Team; away_team?: 
           </span>
         )}
       </div>
-
-      {/* Date / Status */}
       <div style={{
-        padding: '0.25rem 0.6rem', borderTop: '1px solid var(--border)',
+        padding: '0.2rem 0.6rem', borderTop: '1px solid var(--border)',
         fontSize: 10, color: isLive ? 'var(--green-live)' : 'var(--text-muted)',
         display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center',
       }}>
@@ -128,85 +114,111 @@ function MatchSlot({ match }: { match?: Match & { home_team?: Team; away_team?: 
   )
 }
 
+function Column({ title, matches, gap }: { title: string; matches: any[]; gap: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', width: 200, flexShrink: 0 }}>
+      <div style={{
+        fontFamily: 'var(--font-display)', fontSize: '0.8rem', letterSpacing: '0.1em',
+        color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '1rem',
+        paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)',
+      }}>
+        {title}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap, justifyContent: 'space-around', flexGrow: 1 }}>
+        {matches.map((m, i) => <MatchSlot key={m?.id || i} match={m} />)}
+      </div>
+    </div>
+  )
+}
+
 export default async function BracketPage() {
   const allMatches = await getData()
 
   const byRound = (key: string) =>
     allMatches.filter(m => m.phase === key).sort((a, b) =>
-      new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
-    ) as (Match & { home_team?: Team; away_team?: Team })[]
+      new Date(a.scheduled_at || 0).getTime() - new Date(b.scheduled_at || 0).getTime()
+    )
 
-  const thirdPlace = allMatches.filter(m => m.phase === 'THIRD') as (Match & { home_team?: Team; away_team?: Team })[]
+  const r32 = byRound('R32')
+  const r16 = byRound('R16')
+  const qf = byRound('QF')
+  const sf = byRound('SF')
+  const final = byRound('FINAL')
+  const third = byRound('THIRD')
 
-  const hasAnyData = allMatches.length > 0
+  // Left vs Right strict mapping for R32 based on user rules
+  // If r32 doesn't have 16 items yet, fill with undefined to prevent crashes
+  const pad = (arr: any[], size: number) => {
+    const res = [...arr]
+    while (res.length < size) res.push(undefined)
+    return res
+  }
+
+  const r32Full = pad(r32, 16)
+  const r32Left = [2, 5, 0, 3, 11, 10, 9, 8].map(i => r32Full[i])
+  const r32Right = [1, 4, 6, 7, 14, 13, 12, 15].map(i => r32Full[i])
+
+  // Simple splitting for subsequent rounds
+  const r16Full = pad(r16, 8)
+  const r16Left = [0, 2, 4, 6].map(i => r16Full[i])
+  const r16Right = [1, 3, 5, 7].map(i => r16Full[i])
+
+  const qfFull = pad(qf, 4)
+  const qfLeft = [0, 2].map(i => qfFull[i])
+  const qfRight = [1, 3].map(i => qfFull[i])
+
+  const sfFull = pad(sf, 2)
+  const sfLeft = sfFull.slice(0, 1)
+  const sfRight = sfFull.slice(1, 2)
 
   return (
     <main className="page-content">
       <div className="container">
         <div className="page-header">
           <h1 className="page-title">Mata-Mata</h1>
-          <p className="page-subtitle">
-            {hasAnyData
-              ? `${allMatches.length} jogos · chaveamento Copa 2026`
-              : 'Rodada de 32 → Oitavas → Quartas → Semis → Final'}
-          </p>
+          <p className="page-subtitle">Formato Lado-a-Lado convergindo para a Final</p>
         </div>
 
-        <div style={{ overflowX: 'auto', paddingBottom: '1.5rem' }}>
+        <div style={{ overflowX: 'auto', paddingBottom: '2rem' }}>
           <div style={{
-            display: 'flex', gap: '2.5rem', minWidth: 'max-content',
-            padding: '1rem 0.5rem', alignItems: 'flex-start',
+            display: 'flex', gap: '2rem', minWidth: 'max-content',
+            padding: '1rem', alignItems: 'stretch', margin: '0 auto'
           }}>
-            {ROUNDS.map(round => {
-              const roundMatches = byRound(round.key)
-              const emptySlots = round.slots - roundMatches.length
+            {/* LEFT BRACKET */}
+            <Column title="16-AVOS" matches={r32Left} gap="0.5rem" />
+            <Column title="OITAVAS" matches={r16Left} gap="1.5rem" />
+            <Column title="QUARTAS" matches={qfLeft} gap="4.5rem" />
+            <Column title="SEMIFINAL" matches={sfLeft} gap="12rem" />
 
-              return (
-                <div key={round.key} style={{ display: 'flex', flexDirection: 'column', width: round.width }}>
-                  {/* Round label */}
-                  <div style={{
-                    fontFamily: 'var(--font-display)', fontSize: '0.8rem', letterSpacing: '0.1em',
-                    color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '1rem',
-                    paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)',
-                  }}>
-                    {round.label}
-                  </div>
-
-                  {/* Match slots */}
-                  <div style={{
-                    display: 'flex', flexDirection: 'column',
-                    gap: round.key === 'R32' ? '0.5rem'
-                      : round.key === 'R16' ? '1.2rem'
-                      : round.key === 'QF' ? '3rem'
-                      : round.key === 'SF' ? '7rem'
-                      : '15rem',
-                  }}>
-                    {roundMatches.map(m => (
-                      <MatchSlot key={m.id} match={m as any} />
-                    ))}
-                    {[...Array(emptySlots)].map((_, i) => (
-                      <MatchSlot key={`empty-${i}`} />
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-
-            {/* 3rd place */}
-            {thirdPlace.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', width: 180 }}>
+            {/* CENTER (FINAL & 3RD) */}
+            <div style={{ display: 'flex', flexDirection: 'column', width: 240, flexShrink: 0, justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
+              <div style={{ width: '100%' }}>
                 <div style={{
-                  fontFamily: 'var(--font-display)', fontSize: '0.8rem', letterSpacing: '0.1em',
-                  color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '1rem',
-                  paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)',
+                  fontFamily: 'var(--font-display)', fontSize: '1.2rem', letterSpacing: '0.1em',
+                  color: 'var(--gold)', textAlign: 'center', marginBottom: '1rem',
+                  textShadow: '0 0 10px rgba(240,192,64,0.3)'
+                }}>
+                  GRANDE FINAL
+                </div>
+                <MatchSlot match={final[0]} />
+              </div>
+
+              <div style={{ width: '100%', marginTop: '3rem' }}>
+                <div style={{
+                  fontFamily: 'var(--font-display)', fontSize: '0.9rem', letterSpacing: '0.1em',
+                  color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '1rem'
                 }}>
                   3º LUGAR
                 </div>
-                {thirdPlace.map(m => (
-                  <MatchSlot key={m.id} match={m as any} />
-                ))}
+                <MatchSlot match={third[0]} />
               </div>
-            )}
+            </div>
+
+            {/* RIGHT BRACKET */}
+            <Column title="SEMIFINAL" matches={sfRight} gap="12rem" />
+            <Column title="QUARTAS" matches={qfRight} gap="4.5rem" />
+            <Column title="OITAVAS" matches={r16Right} gap="1.5rem" />
+            <Column title="16-AVOS" matches={r32Right} gap="0.5rem" />
           </div>
         </div>
       </div>
