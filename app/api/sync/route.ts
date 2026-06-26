@@ -77,14 +77,16 @@ export async function GET(request: Request) {
       teamMap[t.external_id] = t.id
     }
 
-    // 3. Sync matches
+    // 3. Sync ALL matches (including knockout TBDs)
     const matches = await fetchMatches()
     for (const m of matches) {
-      if (!m.homeTeam?.id || !m.awayTeam?.id) continue // skip TBD knockout matches
+      // Allow knockout matches with null teams - they'll be updated when determined
+      const homeId = m.homeTeam?.id ? teamMap[m.homeTeam.id] : null
+      const awayId = m.awayTeam?.id ? teamMap[m.awayTeam.id] : null
 
-      const homeId = teamMap[m.homeTeam.id]
-      const awayId = teamMap[m.awayTeam.id]
-      if (!homeId || !awayId) continue
+      // Skip group matches without teams (shouldn't happen but guard anyway)
+      const phase = mapPhase(m.stage)
+      if (phase === 'GROUP' && (!homeId || !awayId)) continue
 
       const { error } = await supabase.from('matches').upsert({
         external_id: m.id,
@@ -96,14 +98,14 @@ export async function GET(request: Request) {
         away_score_extra: m.score?.extraTime?.away ?? null,
         home_score_penalties: m.score?.penalties?.home ?? null,
         away_score_penalties: m.score?.penalties?.away ?? null,
-        phase: mapPhase(m.stage),
+        phase,
         group_name: m.group ? m.group.replace('GROUP_', '') : null,
         match_day: m.matchday,
         scheduled_at: m.utcDate,
         status: mapStatus(m.status),
       }, { onConflict: 'external_id', ignoreDuplicates: false })
 
-      if (error) console.error('Match upsert error:', error.message)
+      if (error) console.error('Match upsert error:', error.message, m.id)
       else matchesUpdated++
     }
 
