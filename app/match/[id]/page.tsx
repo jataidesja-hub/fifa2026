@@ -235,8 +235,8 @@ export default function MatchPage({ params }: { params: Promise<{ id: string }> 
                 <div>
                   <StatRow label="Posição" homeVal={`${hStats.position}º`} awayVal={`${aStats.position}º`} />
                   <StatRow label="Pontos" homeVal={hStats.points} awayVal={aStats.points} />
-                  <StatRow label="Jogos" homeVal={hStats.played_games} awayVal={aStats.played_games} />
-                  <StatRow label="Vitórias - Empates - Derrotas" homeVal={`${hStats.won} - ${hStats.draw} - ${hStats.lost}`} awayVal={`${aStats.won} - ${aStats.draw} - ${aStats.lost}`} />
+                  <StatRow label="Jogos" homeVal={hStats.played} awayVal={aStats.played} />
+                  <StatRow label="Vitórias - Empates - Derrotas" homeVal={`${hStats.wins} - ${hStats.draws} - ${hStats.losses}`} awayVal={`${aStats.wins} - ${aStats.draws} - ${aStats.losses}`} />
                   <StatRow label="Gols Pró" homeVal={hStats.goals_for} awayVal={aStats.goals_for} />
                   <StatRow label="Gols Sofridos" homeVal={hStats.goals_against} awayVal={aStats.goals_against} />
                   <StatRow label="Saldo de Gols" homeVal={hStats.goal_diff > 0 ? `+${hStats.goal_diff}` : hStats.goal_diff} awayVal={aStats.goal_diff > 0 ? `+${aStats.goal_diff}` : aStats.goal_diff} />
