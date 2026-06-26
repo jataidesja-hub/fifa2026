@@ -20,7 +20,7 @@ export default function LiveFloatingCard() {
     }
 
     fetchLive()
-    const interval = setInterval(fetchLive, 15000)
+    const interval = setInterval(fetchLive, 5000)
     return () => clearInterval(interval)
   }, [])
 
