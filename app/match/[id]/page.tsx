@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { supabase, Match, Team, MatchEvent } from '@/lib/supabase'
 import { subscribeToMatch } from '@/lib/realtime'
 import { notFound } from 'next/navigation'
@@ -23,7 +23,8 @@ const EVENT_ICONS: Record<string, { icon: string; cls: string; label: string }> 
   SUBSTITUTION: { icon: '🔄', cls: 'goal', label: 'Substituição' },
 }
 
-export default function MatchPage({ params }: { params: { id: string } }) {
+export default function MatchPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params)
   const [match, setMatch] = useState<(Match & { home_team?: Team; away_team?: Team }) | null>(null)
   const [events, setEvents] = useState<MatchEvent[]>([])
   const [loading, setLoading] = useState(true)
@@ -33,12 +34,12 @@ export default function MatchPage({ params }: { params: { id: string } }) {
       supabase
         .from('matches')
         .select(`*, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)`)
-        .eq('id', params.id)
+        .eq('id', id)
         .single(),
       supabase
         .from('match_events')
         .select(`*, player:players(*), team:teams(*)`)
-        .eq('match_id', params.id)
+        .eq('match_id', id)
         .order('minute', { ascending: true }),
     ])
 
@@ -46,17 +47,17 @@ export default function MatchPage({ params }: { params: { id: string } }) {
     setMatch(matchData as any)
     setEvents(eventsData || [])
     setLoading(false)
-  }, [params.id])
+  }, [id])
 
   useEffect(() => {
     loadData()
     const unsub = subscribeToMatch(
-      params.id,
+      id,
       (updated) => setMatch(prev => prev ? { ...prev, ...updated } : prev),
       (event) => setEvents(prev => [...prev, event].sort((a, b) => (a.minute || 0) - (b.minute || 0)))
     )
     return unsub
-  }, [params.id, loadData])
+  }, [id, loadData])
 
   if (loading) return (
     <main className="page-content">

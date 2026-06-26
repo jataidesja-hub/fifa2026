@@ -25,6 +25,19 @@ function PosBadge({ pos }: { pos: number }) {
 }
 
 export default function GroupTable({ standings, groupName }: Props) {
+  const padded = [...standings]
+  while (padded.length < 4) {
+    padded.push({
+      id: `empty-${padded.length}`,
+      position: padded.length + 1,
+      team_id: '',
+      team: { name: 'A definir', short_name: 'TBD', flag_url: '' } as Team,
+      played: 0, wins: 0, draws: 0, losses: 0,
+      goals_for: 0, goals_against: 0, goal_diff: 0, points: 0,
+      form: '', group_name: groupName
+    } as any)
+  }
+
   return (
     <div className="card animate-fade-up">
       <div className="card-header">
@@ -51,7 +64,7 @@ export default function GroupTable({ standings, groupName }: Props) {
             </tr>
           </thead>
           <tbody>
-            {standings.map((row, i) => (
+            {padded.map((row, i) => (
               <tr key={row.id || i}>
                 <td>
                   <PosBadge pos={row.position} />

@@ -153,17 +153,14 @@ export default function LiveDashboard({
 
   const groupKeys = Object.keys(groups).sort()
 
-  // Find live or today's matches
-  const now = new Date()
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-  const endOfDay = startOfDay + 24 * 60 * 60 * 1000
-
-  const activeMatches = matches.filter(m => {
-    if (m.status === 'IN_PLAY' || m.status === 'PAUSED') return true
-    if (!m.scheduled_at) return false
-    const time = new Date(m.scheduled_at).getTime()
-    return time >= startOfDay && time <= endOfDay
-  }).sort((a, b) => new Date(a.scheduled_at || 0).getTime() - new Date(b.scheduled_at || 0).getTime())
+  // Find live or next upcoming matches if none are today
+  const liveMatches = matches.filter(m => m.status === 'IN_PLAY' || m.status === 'PAUSED')
+  const scheduledMatches = matches.filter(m => m.status === 'SCHEDULED' || m.status === 'TIMED').sort((a, b) => new Date(a.scheduled_at || 0).getTime() - new Date(b.scheduled_at || 0).getTime())
+  
+  // If there are live matches, show live + next 2 scheduled. If no live, show next 4 scheduled.
+  const activeMatches = liveMatches.length > 0 
+    ? [...liveMatches, ...scheduledMatches.slice(0, 4)]
+    : scheduledMatches.slice(0, 4)
 
   return (
     <div className="live-dashboard">
