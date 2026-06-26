@@ -5,6 +5,7 @@ import { subscribeToMatch } from '@/lib/realtime'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import GroupTable from '@/components/GroupTable'
+import LiveTimer from '@/components/LiveTimer'
 
 function formatDate(d: string) {
   return new Date(d).toLocaleString('pt-BR', {
@@ -131,7 +132,7 @@ export default function MatchPage({ params }: { params: Promise<{ id: string }> 
           </div>
 
           <div className="scoreboard-center">
-            {isLive && <span className="badge-live">{match.minute ? `${match.minute}'` : 'AO VIVO'}</span>}
+            {isLive && <span className="badge-live"><LiveTimer initialMinute={match.minute} status={match.status} /></span>}
             {isFinished && <span className="badge-finished">ENCERRADO</span>}
             {!isLive && !isFinished && <span className="badge-scheduled">Agendado</span>}
 

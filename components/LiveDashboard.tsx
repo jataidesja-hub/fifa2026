@@ -83,7 +83,7 @@ export default function LiveDashboard({
       }
     }
 
-    const interval = setInterval(fetchLive, 60000) // 1 minute
+    const interval = setInterval(fetchLive, 15000) // 15 seconds
     return () => clearInterval(interval)
   }, [])
 

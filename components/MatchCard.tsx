@@ -1,6 +1,7 @@
 'use client'
 import { Match, Team } from '@/lib/supabase'
 import Link from 'next/link'
+import LiveTimer from './LiveTimer'
 
 interface Props {
   match: Match & { home_team?: Team; away_team?: Team }
@@ -61,7 +62,7 @@ export default function MatchCard({ match, showGroup }: Props) {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem', marginLeft: 'auto' }}>
           {isLive && (
             <span className="badge-live">
-              {match.minute ? `${match.minute}'` : 'AO VIVO'}
+              <LiveTimer initialMinute={match.minute} status={match.status} />
             </span>
           )}
           {isFinished && <span className="badge-finished">FIM</span>}
