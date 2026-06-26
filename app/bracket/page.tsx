@@ -8,26 +8,34 @@ export const metadata = {
 }
 
 async function getData() {
-  const { data: matches } = await supabase
-    .from('matches')
-    .select(`
-      *,
-      home_team:teams!matches_home_team_id_fkey(*),
-      away_team:teams!matches_away_team_id_fkey(*)
-    `)
-    .in('phase', ['ROUND_32', 'ROUND_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'THIRD_PLACE', 'FINAL'])
-    .order('scheduled_at')
+  const [{ data: matches }, { data: standings }] = await Promise.all([
+    supabase
+      .from('matches')
+      .select(`
+        *,
+        home_team:teams!matches_home_team_id_fkey(*),
+        away_team:teams!matches_away_team_id_fkey(*)
+      `)
+      .in('phase', ['ROUND_32', 'ROUND_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'THIRD_PLACE', 'FINAL'])
+      .order('scheduled_at'),
+    supabase
+      .from('standings')
+      .select(`*, team:teams(*)`)
+  ])
 
-  return (matches || []) as (Match & { home_team?: Team; away_team?: Team })[]
+  return {
+    matches: (matches || []) as (Match & { home_team?: Team & { isProjected?: boolean }; away_team?: Team & { isProjected?: boolean } })[],
+    standings: (standings || [])
+  }
 }
 
-function FlagOrPlaceholder({ team, size = 20 }: { team?: Team | null; size?: number }) {
+function FlagOrPlaceholder({ team, size = 20 }: { team?: (Team & { isProjected?: boolean }) | null; size?: number }) {
   if (team?.flag_url) {
     return (
       <img
         src={team.flag_url}
         alt={team.name}
-        style={{ width: size, height: Math.round(size * 0.7), objectFit: 'cover', borderRadius: 2, flexShrink: 0 }}
+        style={{ width: size, height: Math.round(size * 0.7), objectFit: 'cover', borderRadius: 2, flexShrink: 0, opacity: team.isProjected ? 0.3 : 1 }}
       />
     )
   }
@@ -42,7 +50,7 @@ function FlagOrPlaceholder({ team, size = 20 }: { team?: Team | null; size?: num
   )
 }
 
-function MatchSlot({ match }: { match?: Match & { home_team?: Team; away_team?: Team } }) {
+function MatchSlot({ match }: { match?: Match & { home_team?: Team & { isProjected?: boolean }; away_team?: Team & { isProjected?: boolean } } }) {
   const isFinished = match?.status === 'FINISHED'
   const isLive = match?.status === 'IN_PLAY' || match?.status === 'PAUSED'
   const hasTeams = match?.home_team_id && match?.away_team_id
@@ -51,15 +59,16 @@ function MatchSlot({ match }: { match?: Match & { home_team?: Team; away_team?: 
      (match.home_score_penalties ?? 0) > (match.away_score_penalties ?? 0))
   const awayWins = isFinished && !homeWins
 
-  const rowStyle = (winner: boolean): React.CSSProperties => ({
+  const rowStyle = (winner: boolean, team?: (Team & { isProjected?: boolean }) | null): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     padding: '0.4rem 0.6rem', gap: '0.4rem',
     background: winner ? 'rgba(240,192,64,0.1)' : 'transparent',
     fontWeight: winner ? 700 : 400,
-    color: winner ? 'var(--gold)' : hasTeams ? 'var(--text-primary)' : 'var(--text-muted)',
+    color: winner ? 'var(--gold)' : team ? 'var(--text-primary)' : 'var(--text-muted)',
+    opacity: team?.isProjected ? 0.5 : 1,
   })
 
-  const teamName = (team?: Team | null) =>
+  const teamName = (team?: (Team & { isProjected?: boolean }) | null) =>
     team?.short_name || team?.name?.slice(0, 12) || 'A definir'
 
   return (
@@ -69,7 +78,7 @@ function MatchSlot({ match }: { match?: Match & { home_team?: Team; away_team?: 
       boxShadow: isLive ? '0 0 12px rgba(34,197,94,0.15)' : 'none',
       width: '100%',
     }}>
-      <div style={rowStyle(!!homeWins)}>
+      <div style={rowStyle(!!homeWins, match?.home_team)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflow: 'hidden' }}>
           <FlagOrPlaceholder team={match?.home_team} size={18} />
           <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 100 }}>
@@ -83,7 +92,7 @@ function MatchSlot({ match }: { match?: Match & { home_team?: Team; away_team?: 
         )}
       </div>
       <div style={{ height: 1, background: 'var(--border)' }} />
-      <div style={rowStyle(!!awayWins)}>
+      <div style={rowStyle(!!awayWins, match?.away_team)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflow: 'hidden' }}>
           <FlagOrPlaceholder team={match?.away_team} size={18} />
           <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 100 }}>
@@ -132,10 +141,65 @@ function Column({ title, matches, gap }: { title: string; matches: any[]; gap: s
 }
 
 export default async function BracketPage() {
-  const allMatches = await getData()
+  const { matches, standings } = await getData()
 
-  const byRound = (key: string) =>
-    allMatches.filter(m => m.phase === key).sort((a, b) =>
+  // Projeção dinâmica dos times (32 classificados)
+  const qualifiedTeams = (() => {
+    if (standings.length === 0) return []
+    // Agrupa standings por grupo
+    const groups: Record<string, typeof standings> = {}
+    for (const s of standings) {
+      if (!groups[s.group_name]) groups[s.group_name] = []
+      groups[s.group_name].push(s)
+    }
+    
+    const top2: (Team & { isProjected?: boolean })[] = []
+    const thirds: (typeof standings[0])[] = []
+    
+    for (const g in groups) {
+      const gStds = groups[g].sort((a, b) => a.position - b.position)
+      if (gStds[0]?.team) top2.push({ ...gStds[0].team, isProjected: true })
+      if (gStds[1]?.team) top2.push({ ...gStds[1].team, isProjected: true })
+      if (gStds[2]) thirds.push(gStds[2])
+    }
+    
+    // Pega os 8 melhores terceiros
+    thirds.sort((a, b) => b.points - a.points || b.goal_diff - a.goal_diff || b.goals_for - a.goals_for)
+    const top8Thirds = thirds.slice(0, 8).map(s => s.team ? { ...s.team, isProjected: true } : null).filter(Boolean) as (Team & { isProjected?: boolean })[]
+    
+    return [...top2, ...top8Thirds]
+  })()
+
+  // Descobrir quais times já estão no mata-mata real
+  const assignedTeamIds = new Set<string>()
+  for (const m of matches) {
+    if (m.phase === 'ROUND_32') {
+      if (m.home_team_id) assignedTeamIds.add(m.home_team_id)
+      if (m.away_team_id) assignedTeamIds.add(m.away_team_id)
+    }
+  }
+
+  // Lista de times classificados que AINDA NÃO estão no mata-mata real
+  const remainingProjectedTeams = qualifiedTeams.filter(t => !assignedTeamIds.has(t.id))
+
+  // Preencher os buracos do R32 com os times projetados
+  const projectedMatches = matches.map(m => {
+    if (m.phase === 'ROUND_32') {
+      const newM = { ...m }
+      if (!newM.home_team_id && remainingProjectedTeams.length > 0) {
+        newM.home_team = remainingProjectedTeams.shift()
+      }
+      if (!newM.away_team_id && remainingProjectedTeams.length > 0) {
+        newM.away_team = remainingProjectedTeams.shift()
+      }
+      return newM
+    }
+    return m
+  })
+
+  const byRound = (r: string) => projectedMatches
+    .filter(m => m.phase === r)
+    .sort((a, b) =>
       new Date(a.scheduled_at || 0).getTime() - new Date(b.scheduled_at || 0).getTime()
     )
 
