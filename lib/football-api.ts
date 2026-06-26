@@ -49,7 +49,10 @@ export interface FDStanding {
 
 export async function fetchMatches(): Promise<FDMatch[]> {
   try {
-    const res = await fetch(`${BASE_URL}/competitions/${WC_2026_ID}/matches`, { headers })
+    const res = await fetch(`${BASE_URL}/competitions/${WC_2026_ID}/matches`, { 
+      headers,
+      next: { revalidate: 15 }
+    })
     if (!res.ok) return []
     const data = await res.json()
     return data.matches || []

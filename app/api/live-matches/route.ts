@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { fetchMatches } from '@/lib/football-api'
 
-export const revalidate = 60
+export const revalidate = 15
 
 export async function GET() {
   try {
