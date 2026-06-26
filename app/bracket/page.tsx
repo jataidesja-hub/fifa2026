@@ -220,17 +220,17 @@ export default async function BracketPage() {
   }
 
   const r32Full = pad(r32, 16)
-  const r32Left = [2, 5, 0, 3, 11, 10, 9, 8].map(i => r32Full[i])
-  const r32Right = [1, 4, 6, 7, 14, 13, 12, 15].map(i => r32Full[i])
+  const r32Left = [1, 4, 0, 2, 10, 11, 8, 9].map(i => r32Full[i])
+  const r32Right = [3, 5, 6, 7, 13, 15, 12, 14].map(i => r32Full[i])
 
   // Simple splitting for subsequent rounds
   const r16Full = pad(r16, 8)
-  const r16Left = [0, 2, 4, 6].map(i => r16Full[i])
-  const r16Right = [1, 3, 5, 7].map(i => r16Full[i])
+  const r16Left = [0, 1, 4, 5].map(i => r16Full[i])
+  const r16Right = [2, 3, 6, 7].map(i => r16Full[i])
 
   const qfFull = pad(qf, 4)
-  const qfLeft = [0, 2].map(i => qfFull[i])
-  const qfRight = [1, 3].map(i => qfFull[i])
+  const qfLeft = [0, 1].map(i => qfFull[i])
+  const qfRight = [2, 3].map(i => qfFull[i])
 
   const sfFull = pad(sf, 2)
   const sfLeft = sfFull.slice(0, 1)
