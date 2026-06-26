@@ -1,0 +1,194 @@
+[
+  {
+    "name": "México",
+    "group": "A"
+  },
+  {
+    "name": "África do Sul",
+    "group": "A"
+  },
+  {
+    "name": "Coreia do Sul",
+    "group": "A"
+  },
+  {
+    "name": "República Tcheca",
+    "group": "A"
+  },
+  {
+    "name": "Suíça",
+    "group": "B"
+  },
+  {
+    "name": "Canadá",
+    "group": "B"
+  },
+  {
+    "name": "Bósnia e Herzegovina",
+    "group": "B"
+  },
+  {
+    "name": "Catar",
+    "group": "B"
+  },
+  {
+    "name": "Brasil",
+    "group": "C"
+  },
+  {
+    "name": "Marrocos",
+    "group": "C"
+  },
+  {
+    "name": "Escócia",
+    "group": "C"
+  },
+  {
+    "name": "Haiti",
+    "group": "C"
+  },
+  {
+    "name": "Estados Unidos",
+    "group": "D"
+  },
+  {
+    "name": "Austrália",
+    "group": "D"
+  },
+  {
+    "name": "Paraguai",
+    "group": "D"
+  },
+  {
+    "name": "Turquia",
+    "group": "D"
+  },
+  {
+    "name": "Alemanha",
+    "group": "E"
+  },
+  {
+    "name": "Costa do Marfim",
+    "group": "E"
+  },
+  {
+    "name": "Equador",
+    "group": "E"
+  },
+  {
+    "name": "Curaçau",
+    "group": "E"
+  },
+  {
+    "name": "Holanda",
+    "group": "F"
+  },
+  {
+    "name": "Japão",
+    "group": "F"
+  },
+  {
+    "name": "Suécia",
+    "group": "F"
+  },
+  {
+    "name": "Tunísia",
+    "group": "F"
+  },
+  {
+    "name": "Bélgica",
+    "group": "G"
+  },
+  {
+    "name": "Egito",
+    "group": "G"
+  },
+  {
+    "name": "Irã",
+    "group": "G"
+  },
+  {
+    "name": "Nova Zelândia",
+    "group": "G"
+  },
+  {
+    "name": "Espanha",
+    "group": "H"
+  },
+  {
+    "name": "Uruguai",
+    "group": "H"
+  },
+  {
+    "name": "Cabo Verde",
+    "group": "H"
+  },
+  {
+    "name": "Arábia Saudita",
+    "group": "H"
+  },
+  {
+    "name": "França",
+    "group": "I"
+  },
+  {
+    "name": "Noruega",
+    "group": "I"
+  },
+  {
+    "name": "Senegal",
+    "group": "I"
+  },
+  {
+    "name": "Iraque",
+    "group": "I"
+  },
+  {
+    "name": "Argentina",
+    "group": "J"
+  },
+  {
+    "name": "Áustria",
+    "group": "J"
+  },
+  {
+    "name": "Argélia",
+    "group": "J"
+  },
+  {
+    "name": "Jordânia",
+    "group": "J"
+  },
+  {
+    "name": "Colômbia",
+    "group": "K"
+  },
+  {
+    "name": "Portugal",
+    "group": "K"
+  },
+  {
+    "name": "RD Congo",
+    "group": "K"
+  },
+  {
+    "name": "Uzbequistão",
+    "group": "K"
+  },
+  {
+    "name": "Inglaterra",
+    "group": "L"
+  },
+  {
+    "name": "Croácia",
+    "group": "L"
+  },
+  {
+    "name": "Gana",
+    "group": "L"
+  },
+  {
+    "name": "Panamá",
+    "group": "L"
+  }
+]

@@ -60,15 +60,22 @@ export async function GET(request: Request) {
     const teams = await fetchTeams()
     for (const t of teams) {
       if (!t.id) continue
-      const { error } = await supabase.from('teams').upsert({
-        external_id: t.id,
-        name: t.name,
-        short_name: t.shortName || t.tla,
-        flag_url: t.crest,
-        confederation: getConfederation(t.area?.code || ''),
-      }, { onConflict: 'external_id', ignoreDuplicates: false })
+      
+      const { data: existingTeam } = await supabase
+        .from('teams')
+        .select('id')
+        .eq('external_id', t.id)
+        .single()
 
-      if (error) console.error('Team upsert error:', error.message, t.name)
+      if (!existingTeam) {
+        await supabase.from('teams').insert({
+          external_id: t.id,
+          name: t.name,
+          short_name: t.shortName || t.tla,
+          flag_url: t.crest,
+          confederation: getConfederation(t.area?.code || ''),
+        })
+      }
     }
 
     // 2. Build external_id → internal UUID map for teams
@@ -164,8 +171,8 @@ export async function GET(request: Request) {
 
         const groupName = stage.group ? stage.group.replace(/Group\s?_?/i, '').trim() : 'A'
 
-        // Update team group_name (forced update, no null check)
-        await supabase.from('teams').update({ group_name: groupName }).eq('id', teamId)
+        // We skip overwriting group_name to preserve user's hardcoded groups
+        // await supabase.from('teams').update({ group_name: groupName }).eq('id', teamId)
       }
     }
 
