@@ -1,8 +1,43 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function BracketZoomWrapper({ children }: { children: React.ReactNode }) {
   const [expanded, setExpanded] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+
+  useEffect(() => {
+    if (!expanded) {
+      setScale(1)
+      return
+    }
+
+    const updateScale = () => {
+      if (contentRef.current) {
+        const containerWidth = window.innerWidth
+        const containerHeight = window.innerHeight
+        
+        // Remove scale temporariamente para medir o tamanho real do conteúdo
+        contentRef.current.style.transform = 'scale(1)'
+        const contentWidth = contentRef.current.scrollWidth
+        const contentHeight = contentRef.current.scrollHeight
+        
+        // Calcula a escala necessária para caber na tela, considerando um espaço para o iframe no topo (aprox 300px) e paddings
+        const scaleX = (containerWidth - 64) / contentWidth // 32px padding de cada lado
+        const scaleY = (containerHeight - 350) / contentHeight // Espaço extra para o iframe e botões
+        
+        // Pega a menor escala para garantir que caiba tanto na largura quanto na altura
+        const newScale = Math.min(scaleX, scaleY, 1.2) // Limite máximo de 1.2x
+        
+        setScale(newScale)
+      }
+    }
+
+    // Dá um pequeno atraso para garantir que a renderização inicial do layout ocorreu
+    setTimeout(updateScale, 50)
+    window.addEventListener('resize', updateScale)
+    return () => window.removeEventListener('resize', updateScale)
+  }, [expanded])
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
@@ -47,42 +82,75 @@ export default function BracketZoomWrapper({ children }: { children: React.React
           bottom: 0,
           zIndex: 100,
           background: 'var(--bg-900)',
-          padding: '4rem 2rem',
+          padding: '2rem',
           display: 'flex',
-          alignItems: 'center'
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          overflowY: 'auto'
         } : {})
       }}>
         {expanded && (
-          <button
-            onClick={() => setExpanded(false)}
-            style={{
-              position: 'fixed',
-              top: '2rem',
-              right: '2rem',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-primary)',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 101,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
+          <>
+            <button
+              onClick={() => setExpanded(false)}
+              style={{
+                position: 'fixed',
+                top: '2rem',
+                right: '2rem',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 105,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+            
+            {/* Quadrado centralizado para Youtube/Outras páginas */}
+            <div style={{
+              width: '100%',
+              maxWidth: '480px',
+              aspectRatio: '16/9',
+              background: '#000',
+              borderRadius: '12px',
+              marginBottom: '2rem',
+              flexShrink: 0,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+              overflow: 'hidden',
+              border: '1px solid var(--border)'
+            }}>
+              <iframe 
+                width="100%" 
+                height="100%" 
+                src="https://www.youtube.com/embed/jfKfPfyJRdk" 
+                title="YouTube video" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
+            </div>
+          </>
         )}
-        <div style={{
-          transform: expanded ? 'scale(1.1)' : 'scale(1)',
-          transformOrigin: 'center center',
-          transition: 'transform 0.3s ease',
-          margin: '0 auto',
-          minWidth: 'max-content'
-        }}>
+        
+        <div 
+          ref={contentRef}
+          style={{
+            transform: expanded ? `scale(${scale})` : 'scale(1)',
+            transformOrigin: 'top center',
+            transition: 'transform 0.3s ease',
+            margin: '0 auto',
+            minWidth: 'max-content'
+          }}
+        >
           {children}
         </div>
       </div>
