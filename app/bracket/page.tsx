@@ -1,5 +1,6 @@
 import { supabase, Match, Team } from '@/lib/supabase'
-
+import BracketZoomWrapper from '@/components/BracketZoomWrapper'
+import LiveFloatingCard from '@/components/LiveFloatingCard'
 export const revalidate = 30
 
 export const metadata = {
@@ -243,7 +244,7 @@ export default async function BracketPage() {
           <p className="page-subtitle">Formato Lado-a-Lado convergindo para a Final</p>
         </div>
 
-        <div style={{ overflowX: 'auto', paddingBottom: '2rem' }}>
+        <BracketZoomWrapper>
           <div style={{
             display: 'flex', gap: '2rem', minWidth: 'max-content',
             padding: '1rem', alignItems: 'stretch', margin: '0 auto'
@@ -284,7 +285,9 @@ export default async function BracketPage() {
             <Column title="OITAVAS" matches={r16Right} gap="1.5rem" />
             <Column title="16-AVOS" matches={r32Right} gap="0.5rem" />
           </div>
-        </div>
+        </BracketZoomWrapper>
+
+        <LiveFloatingCard />
       </div>
     </main>
   )
