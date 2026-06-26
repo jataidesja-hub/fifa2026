@@ -77,6 +77,49 @@ export async function GET(request: Request) {
       teamMap[t.external_id] = t.id
     }
 
+    const scorers = await fetchScorers()
+    if (scorers.length > 0) {
+      // Upsert all players from scorers first
+      for (const s of scorers) {
+        if (!s.player?.id || !s.team?.id) continue
+        const teamId = teamMap[s.team.id]
+        if (!teamId) continue
+
+        const { error: pError } = await supabase.from('players').upsert({
+          external_id: s.player.id,
+          name: s.player.name,
+          team_id: teamId,
+        }, { onConflict: 'external_id', ignoreDuplicates: false })
+        if (pError) console.error('Player upsert error:', pError.message)
+      }
+
+      // Re-fetch player map after upsert
+      const { data: updatedPlayerMapData } = await supabase.from('players').select('id, external_id')
+      const playerMap: Record<number, string> = {}
+      for (const p of (updatedPlayerMapData || [])) {
+        playerMap[p.external_id] = p.id
+      }
+
+      // Clear existing to avoid constraint errors, then insert fresh
+      await supabase.from('player_stats').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+
+      const statsToInsert = []
+      for (const s of scorers) {
+        if (!s.player?.id || !playerMap[s.player.id]) continue
+        statsToInsert.push({
+          player_id: playerMap[s.player.id],
+          goals: s.goals,
+          assists: s.assists ?? 0,
+          played_matches: s.playedMatches ?? 0,
+        })
+      }
+      
+      if (statsToInsert.length > 0) {
+        const { error } = await supabase.from('player_stats').insert(statsToInsert)
+        if (error) console.error('Player stats insert error:', error.message)
+      }
+    }
+
     // 3. Sync ALL matches (including knockout TBDs)
     const matches = await fetchMatches()
     for (const m of matches) {

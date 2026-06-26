@@ -152,73 +152,63 @@ export default async function BracketPage() {
           </p>
         </div>
 
-        {!hasAnyData ? (
-          <div className="card" style={{ padding: '4rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏆</div>
-            <h3 style={{ color: 'var(--text-secondary)' }}>Fase eliminatória ainda não iniciada</h3>
-            <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-              A fase de grupos está em andamento. O chaveamento será exibido ao iniciar a Rodada de 32.
-            </p>
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto', paddingBottom: '1.5rem' }}>
-            <div style={{
-              display: 'flex', gap: '2.5rem', minWidth: 'max-content',
-              padding: '1rem 0.5rem', alignItems: 'flex-start',
-            }}>
-              {ROUNDS.map(round => {
-                const roundMatches = byRound(round.key)
-                const emptySlots = round.slots - roundMatches.length
+        <div style={{ overflowX: 'auto', paddingBottom: '1.5rem' }}>
+          <div style={{
+            display: 'flex', gap: '2.5rem', minWidth: 'max-content',
+            padding: '1rem 0.5rem', alignItems: 'flex-start',
+          }}>
+            {ROUNDS.map(round => {
+              const roundMatches = byRound(round.key)
+              const emptySlots = round.slots - roundMatches.length
 
-                return (
-                  <div key={round.key} style={{ display: 'flex', flexDirection: 'column', width: round.width }}>
-                    {/* Round label */}
-                    <div style={{
-                      fontFamily: 'var(--font-display)', fontSize: '0.8rem', letterSpacing: '0.1em',
-                      color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '1rem',
-                      paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)',
-                    }}>
-                      {round.label}
-                    </div>
-
-                    {/* Match slots */}
-                    <div style={{
-                      display: 'flex', flexDirection: 'column',
-                      gap: round.key === 'R32' ? '0.5rem'
-                        : round.key === 'R16' ? '1.2rem'
-                        : round.key === 'QF' ? '3rem'
-                        : round.key === 'SF' ? '7rem'
-                        : '15rem',
-                    }}>
-                      {roundMatches.map(m => (
-                        <MatchSlot key={m.id} match={m as any} />
-                      ))}
-                      {[...Array(emptySlots)].map((_, i) => (
-                        <MatchSlot key={`empty-${i}`} />
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-
-              {/* 3rd place */}
-              {thirdPlace.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', width: 180 }}>
+              return (
+                <div key={round.key} style={{ display: 'flex', flexDirection: 'column', width: round.width }}>
+                  {/* Round label */}
                   <div style={{
                     fontFamily: 'var(--font-display)', fontSize: '0.8rem', letterSpacing: '0.1em',
                     color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '1rem',
                     paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)',
                   }}>
-                    3º LUGAR
+                    {round.label}
                   </div>
-                  {thirdPlace.map(m => (
-                    <MatchSlot key={m.id} match={m as any} />
-                  ))}
+
+                  {/* Match slots */}
+                  <div style={{
+                    display: 'flex', flexDirection: 'column',
+                    gap: round.key === 'R32' ? '0.5rem'
+                      : round.key === 'R16' ? '1.2rem'
+                      : round.key === 'QF' ? '3rem'
+                      : round.key === 'SF' ? '7rem'
+                      : '15rem',
+                  }}>
+                    {roundMatches.map(m => (
+                      <MatchSlot key={m.id} match={m as any} />
+                    ))}
+                    {[...Array(emptySlots)].map((_, i) => (
+                      <MatchSlot key={`empty-${i}`} />
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
+              )
+            })}
+
+            {/* 3rd place */}
+            {thirdPlace.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', width: 180 }}>
+                <div style={{
+                  fontFamily: 'var(--font-display)', fontSize: '0.8rem', letterSpacing: '0.1em',
+                  color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '1rem',
+                  paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)',
+                }}>
+                  3º LUGAR
+                </div>
+                {thirdPlace.map(m => (
+                  <MatchSlot key={m.id} match={m as any} />
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </main>
   )
