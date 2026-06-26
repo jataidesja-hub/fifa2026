@@ -5,26 +5,6 @@ export default function BracketZoomWrapper({ children }: { children: React.React
   const [expanded, setExpanded] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
-  const [videoUrl, setVideoUrl] = useState('https://www.youtube.com/embed/jfKfPfyJRdk')
-  const [inputValue, setInputValue] = useState('')
-
-  const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setInputValue(val)
-    
-    let embedUrl = val
-    try {
-      if (val.includes('youtube.com/watch')) {
-        const url = new URL(val)
-        const id = url.searchParams.get('v')
-        if (id) embedUrl = `https://www.youtube.com/embed/${id}`
-      } else if (val.includes('youtu.be/')) {
-        const id = val.split('youtu.be/')[1]?.split('?')[0]
-        if (id) embedUrl = `https://www.youtube.com/embed/${id}`
-      }
-    } catch (err) {}
-    if (embedUrl) setVideoUrl(embedUrl)
-  }
 
   useEffect(() => {
     if (!expanded) {
@@ -42,12 +22,12 @@ export default function BracketZoomWrapper({ children }: { children: React.React
         const contentWidth = contentRef.current.scrollWidth
         const contentHeight = contentRef.current.scrollHeight
         
-        // Calcula a escala necessária para caber na tela, considerando um espaço para o iframe no topo (aprox 300px) e paddings
+        // Calcula a escala necessária para caber na tela
         const scaleX = (containerWidth - 64) / contentWidth // 32px padding de cada lado
-        const scaleY = (containerHeight - 350) / contentHeight // Espaço extra para o iframe e botões
+        const scaleY = (containerHeight - 64) / contentHeight // 32px padding de cada lado
         
         // Pega a menor escala para garantir que caiba tanto na largura quanto na altura
-        const newScale = Math.min(scaleX, scaleY, 1.2) // Limite máximo de 1.2x
+        const newScale = Math.min(scaleX, scaleY, 1.5)
         
         setScale(newScale)
       }
@@ -102,93 +82,42 @@ export default function BracketZoomWrapper({ children }: { children: React.React
           bottom: 0,
           zIndex: 100,
           background: 'var(--bg-900)',
-          padding: '2rem',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'flex-start',
-          overflowY: 'auto'
+          justifyContent: 'center',
+          padding: '2rem'
         } : {})
       }}>
         {expanded && (
-          <>
-            <button
-              onClick={() => setExpanded(false)}
-              style={{
-                position: 'fixed',
-                top: '2rem',
-                right: '2rem',
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-primary)',
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 105,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-            
-            {/* Quadrado centralizado para Youtube/Outras páginas */}
-            <div style={{
-              width: '100%',
-              maxWidth: '480px',
+          <button
+            onClick={() => setExpanded(false)}
+            style={{
+              position: 'fixed',
+              top: '2rem',
+              right: '2rem',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-primary)',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
               display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
-              marginBottom: '2rem',
-              zIndex: 102
-            }}>
-              <div style={{
-                width: '100%',
-                aspectRatio: '16/9',
-                background: '#000',
-                borderRadius: '12px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                overflow: 'hidden',
-                border: '1px solid var(--border)'
-              }}>
-                <iframe 
-                  width="100%" 
-                  height="100%" 
-                  src={videoUrl} 
-                  title="YouTube video" 
-                  frameBorder="0" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                  allowFullScreen
-                ></iframe>
-              </div>
-              <input
-                type="text"
-                value={inputValue}
-                onChange={handleLinkChange}
-                placeholder="Cole o link do YouTube aqui..."
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border)',
-                  background: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
-                  fontSize: '0.9rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
-          </>
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 105,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
         )}
         
         <div 
           ref={contentRef}
           style={{
             transform: expanded ? `scale(${scale})` : 'scale(1)',
-            transformOrigin: 'top center',
+            transformOrigin: 'center center',
             transition: 'transform 0.3s ease',
             margin: '0 auto',
             minWidth: 'max-content'
