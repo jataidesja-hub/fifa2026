@@ -211,7 +211,43 @@ export default function MatchPage({ params }: { params: Promise<{ id: string }> 
           </div>
         )}
 
-        {events.length === 0 && standings.length > 0 && match.phase === 'GROUP' && (
+        {/* Side-by-side Team Stats from Standings */}
+        {standings.length > 0 && match.home_team_id && match.away_team_id && (
+          <div className="card animate-fade-up" style={{ marginBottom: '2rem', marginTop: '2rem' }}>
+            <div className="card-header" style={{ justifyContent: 'center' }}>
+              <span style={{ fontWeight: 700 }}>Estatísticas da Fase de Grupos</span>
+            </div>
+            {(() => {
+              const hStats = standings.find(s => s.team_id === match.home_team_id)
+              const aStats = standings.find(s => s.team_id === match.away_team_id)
+              
+              if (!hStats || !aStats) return null
+
+              const StatRow = ({ label, homeVal, awayVal }: { label: string; homeVal: any; awayVal: any }) => (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 1rem', borderBottom: '1px solid var(--border)', fontSize: '0.9rem' }}>
+                  <div style={{ flex: 1, fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right' }}>{homeVal}</div>
+                  <div style={{ flex: 1, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+                  <div style={{ flex: 1, fontWeight: 600, color: 'var(--text-primary)', textAlign: 'left' }}>{awayVal}</div>
+                </div>
+              )
+
+              return (
+                <div>
+                  <StatRow label="Posição" homeVal={`${hStats.position}º`} awayVal={`${aStats.position}º`} />
+                  <StatRow label="Pontos" homeVal={hStats.points} awayVal={aStats.points} />
+                  <StatRow label="Jogos" homeVal={hStats.played_games} awayVal={aStats.played_games} />
+                  <StatRow label="Vitórias - Empates - Derrotas" homeVal={`${hStats.won} - ${hStats.draw} - ${hStats.lost}`} awayVal={`${aStats.won} - ${aStats.draw} - ${aStats.lost}`} />
+                  <StatRow label="Gols Pró" homeVal={hStats.goals_for} awayVal={aStats.goals_for} />
+                  <StatRow label="Gols Sofridos" homeVal={hStats.goals_against} awayVal={aStats.goals_against} />
+                  <StatRow label="Saldo de Gols" homeVal={hStats.goal_diff > 0 ? `+${hStats.goal_diff}` : hStats.goal_diff} awayVal={aStats.goal_diff > 0 ? `+${aStats.goal_diff}` : aStats.goal_diff} />
+                </div>
+              )
+            })()}
+          </div>
+        )}
+
+        {/* Group Table */}
+        {standings.length > 0 && match.phase === 'GROUP' && (
           <div style={{ marginTop: '2rem' }}>
             <GroupTable standings={standings} groupName={match.group_name!} />
           </div>
